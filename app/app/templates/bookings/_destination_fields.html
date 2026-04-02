@@ -1,0 +1,17 @@
+{% if abgang_destination == 'Kunde' %}
+<div class="mb-3">
+    <label for="customer_name" class="form-label fw-semibold">Kundenname *</label>
+    <input type="text"
+           class="form-control form-control-lg"
+           id="customer_name"
+           name="customer_name"
+           list="customer-datalist"
+           hx-get="{{ url_for('bookings.customer_search') }}"
+           hx-target="#customer-datalist"
+           hx-trigger="input changed delay:300ms"
+           autocomplete="off"
+           placeholder="Kundenname eingeben…"
+           required>
+    <datalist id="customer-datalist"></datalist>
+</div>
+{% endif %}

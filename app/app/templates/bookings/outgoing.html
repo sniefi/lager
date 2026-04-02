@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Abgang / Umlagerung – Lagerverwaltung{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12 col-md-6">
+        <h2 class="mb-1">Abgang / Umlagerung</h2>
+        <p class="text-muted mb-3">Ware aus einem Lager entnehmen oder umlagern.</p>
+
+        <form method="post">
+            <div class="mb-3">
+                <label for="booking_type" class="form-label fw-semibold">Buchungsart *</label>
+                <select class="form-select form-select-lg"
+                        id="booking_type"
+                        name="booking_type"
+                        hx-get="{{ url_for('bookings.type_fields') }}"
+                        hx-target="#type-specific-fields"
+                        hx-trigger="change"
+                        required>
+                    <option value="">— Buchungsart wählen —</option>
+                    <option value="Abgang">Abgang</option>
+                    <option value="Umlagerung">Umlagerung (Hauptlager → Mitarbeiterlager)</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="article_code" class="form-label fw-semibold">Artikel *</label>
+                <input type="text"
+                       class="form-control form-control-lg"
+                       id="article_code"
+                       name="article_code"
+                       list="article-datalist"
+                       hx-get="{{ url_for('bookings.article_search') }}"
+                       hx-target="#article-datalist"
+                       hx-trigger="input changed delay:300ms"
+                       autocomplete="off"
+                       placeholder="Artikelcode eingeben…"
+                       required>
+                <datalist id="article-datalist">
+                    {% for a in articles %}
+                    <option value="{{ a.article_id }}">{{ a.name }}</option>
+                    {% endfor %}
+                </datalist>
+            </div>
+
+            <div class="mb-3">
+                <label for="quantity" class="form-label fw-semibold">Menge *</label>
+                <input type="number"
+                       class="form-control form-control-lg"
+                       id="quantity"
+                       name="quantity"
+                       min="0.0001"
+                       step="any"
+                       inputmode="decimal"
+                       placeholder="0,00"
+                       required>
+            </div>
+
+            <!-- HTMX tauscht diesen Block je nach Buchungsart -->
+            <div id="type-specific-fields"></div>
+
+            <button type="submit" class="btn btn-warning btn-lg w-100 mt-2">Buchen</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

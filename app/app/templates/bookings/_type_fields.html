@@ -1,0 +1,50 @@
+{% if booking_type == 'Abgang' %}
+<div class="mb-3">
+    <label for="source_warehouse_id" class="form-label fw-semibold">Ausgangslager *</label>
+    <select class="form-select form-select-lg" id="source_warehouse_id" name="source_warehouse_id" required>
+        <option value="">— Lager wählen —</option>
+        {% for w in warehouses %}
+        <option value="{{ w.id }}">{{ w.name }}{% if w.type == 'main' %} (Hauptlager){% endif %}</option>
+        {% endfor %}
+    </select>
+</div>
+
+<div class="mb-3">
+    <label for="abgang_destination" class="form-label fw-semibold">Abgangsart *</label>
+    <select class="form-select form-select-lg"
+            id="abgang_destination"
+            name="abgang_destination"
+            hx-get="{{ url_for('bookings.destination_fields') }}"
+            hx-target="#destination-specific"
+            hx-trigger="change"
+            required>
+        <option value="">— Abgangsart wählen —</option>
+        <option value="Eigenbedarf">Eigenbedarf</option>
+        <option value="Kunde">Kunde</option>
+    </select>
+</div>
+
+<div id="destination-specific"></div>
+
+{% elif booking_type == 'Umlagerung' %}
+<div class="mb-3">
+    <label class="form-label fw-semibold">Quelle</label>
+    <input type="text" class="form-control form-control-lg" value="{% if main_warehouse %}{{ main_warehouse.name }}{% else %}Hauptlager{% endif %}" disabled>
+    {% if main_warehouse %}
+    <input type="hidden" name="source_warehouse_id" value="{{ main_warehouse.id }}">
+    {% endif %}
+</div>
+
+<div class="mb-3">
+    <label for="target_warehouse_id" class="form-label fw-semibold">Ziellager (Mitarbeiterlager) *</label>
+    <select class="form-select form-select-lg" id="target_warehouse_id" name="target_warehouse_id" required>
+        <option value="">— Ziellager wählen —</option>
+        {% for w in employee_warehouses %}
+        <option value="{{ w.id }}">{{ w.name }}</option>
+        {% endfor %}
+    </select>
+    {% if not employee_warehouses %}
+    <div class="form-text text-warning">Noch keine Mitarbeiterlager angelegt.</div>
+    {% endif %}
+</div>
+{% endif %}

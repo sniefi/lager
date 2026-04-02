@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}Abgangsliste – Lagerverwaltung{% endblock %}
+{% block content %}
+<h2 class="mb-3">Abgangsliste</h2>
+
+<form method="get" class="row g-2 mb-4">
+    <div class="col-6 col-md-2">
+        <select class="form-select" name="year">
+            <option value="">Alle Jahre</option>
+            {% for y in years %}
+            <option value="{{ y }}" {% if selected_year == y %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-6 col-md-3">
+        <select class="form-select" name="warehouse_id">
+            <option value="">Alle Lager</option>
+            {% for w in warehouses %}
+            <option value="{{ w.id }}" {% if selected_warehouse == w.id %}selected{% endif %}>{{ w.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-6 col-md-2">
+        <select class="form-select" name="booking_type">
+            <option value="">Alle Arten</option>
+            <option value="Abgang" {% if selected_type == 'Abgang' %}selected{% endif %}>Abgang</option>
+            <option value="Umlagerung" {% if selected_type == 'Umlagerung' %}selected{% endif %}>Umlagerung</option>
+        </select>
+    </div>
+    <div class="col-6 col-md-3">
+        <input type="text" class="form-control" name="customer"
+               placeholder="Kunde…" value="{{ selected_customer or '' }}">
+    </div>
+    <div class="col-12 col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-primary flex-grow-1">Filtern</button>
+        <a href="{{ url_for('reports.outgoing') }}" class="btn btn-outline-secondary">&#x2715;</a>
+    </div>
+</form>
+
+{% if bookings %}
+<div class="table-responsive">
+    <table class="table table-sm table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Datum</th>
+                <th>Art</th>
+                <th>Artikel</th>
+                <th class="text-end">Menge</th>
+                <th>Einheit</th>
+                <th>Von</th>
+                <th>Nach / Ziel</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for b in bookings %}
+            <tr>
+                <td class="text-nowrap">{{ b.created_at.strftime('%d.%m.%Y') }}</td>
+                <td>
+                    {% if b.booking_type == 'Abgang' %}
+                        <span class="badge bg-danger">Abgang</span>
+                        {% if b.abgang_destination %}
+                        <small class="text-muted">{{ b.abgang_destination }}</small>
+                        {% endif %}
+                    {% else %}
+                        <span class="badge bg-info text-dark">Umlagerung</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {{ b.article.name }}
+                    <small class="text-muted">{{ b.article.article_id }}</small>
+                </td>
+                <td class="text-end">{{ '%.4g' | format(b.quantity | float) }}</td>
+                <td>{{ b.article.unit }}</td>
+                <td>{{ b.source_warehouse.name if b.source_warehouse else '–' }}</td>
+                <td>
+                    {% if b.booking_type == 'Umlagerung' %}
+                        {{ b.target_warehouse.name if b.target_warehouse else '–' }}
+                    {% elif b.abgang_destination == 'Kunde' %}
+                        {{ b.customer_name or '–' }}
+                    {% else %}
+                        Eigenbedarf
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="text-muted small">{{ bookings | length }} Einträge</div>
+{% else %}
+<div class="alert alert-info">Keine Einträge für die gewählten Filter.</div>
+{% endif %}
+{% endblock %}

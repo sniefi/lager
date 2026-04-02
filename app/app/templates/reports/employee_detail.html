@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}{{ warehouse.name }} – Eigenbedarf{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center gap-2 mb-3">
+    <a href="{{ url_for('reports.stock') }}" class="btn btn-sm btn-outline-secondary">&larr;</a>
+    <h2 class="mb-0">{{ warehouse.name }} – Eigenbedarf</h2>
+</div>
+
+<h5>Offen (nicht verrechnet)</h5>
+{% if unbilled %}
+<div class="table-responsive mb-4">
+    <table class="table table-hover">
+        <thead class="table-warning">
+            <tr>
+                <th>Datum</th>
+                <th>Artikel</th>
+                <th class="text-end">Menge</th>
+                <th>Einheit</th>
+                <th class="text-center">Verrechnet</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for b in unbilled %}
+            <tr id="row-{{ b.id }}">
+                <td class="text-nowrap">{{ b.created_at.strftime('%d.%m.%Y') }}</td>
+                <td>{{ b.article.name }} <small class="text-muted">{{ b.article.article_id }}</small></td>
+                <td class="text-end">{{ '%.4g' | format(b.quantity | float) }}</td>
+                <td>{{ b.article.unit }}</td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-success"
+                            hx-post="{{ url_for('reports.toggle_billed', warehouse_id=warehouse.id, booking_id=b.id) }}"
+                            hx-target="#row-{{ b.id }}"
+                            hx-swap="outerHTML">
+                        &#10003; Als verrechnet markieren
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-success mb-4">Alle Positionen verrechnet.</div>
+{% endif %}
+
+<h5>Bereits verrechnet <small class="text-muted">(letzte 50)</small></h5>
+{% if billed %}
+<div class="table-responsive">
+    <table class="table table-sm table-hover text-muted">
+        <thead class="table-light">
+            <tr>
+                <th>Abgang</th>
+                <th>Verrechnet</th>
+                <th>Artikel</th>
+                <th class="text-end">Menge</th>
+                <th>Einheit</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for b in billed %}
+            <tr>
+                <td>{{ b.created_at.strftime('%d.%m.%Y') }}</td>
+                <td>{{ b.billed_at.strftime('%d.%m.%Y') if b.billed_at else '–' }}</td>
+                <td>{{ b.article.name }}</td>
+                <td class="text-end">{{ '%.4g' | format(b.quantity | float) }}</td>
+                <td>{{ b.article.unit }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="text-muted">Noch keine verrechneten Positionen.</div>
+{% endif %}
+{% endblock %}

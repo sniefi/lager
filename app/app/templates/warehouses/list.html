@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Lager – Lagerverwaltung{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Lager</h2>
+    <a href="{{ url_for('warehouses.new') }}" class="btn btn-primary">+ Mitarbeiterlager anlegen</a>
+</div>
+
+{% if warehouses %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Name</th>
+                <th>Typ</th>
+                <th>Angelegt</th>
+                <th>Auswertung</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for w in warehouses %}
+            <tr>
+                <td>{{ w.name }}</td>
+                <td>
+                    {% if w.type == 'main' %}
+                    <span class="badge bg-primary">Hauptlager</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Mitarbeiterlager</span>
+                    {% endif %}
+                </td>
+                <td class="text-muted small">{{ w.created_at.strftime('%d.%m.%Y') }}</td>
+                <td>
+                    {% if w.type == 'employee' %}
+                    <a href="{{ url_for('reports.employee_detail', warehouse_id=w.id) }}"
+                       class="btn btn-sm btn-outline-info">Eigenbedarf</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">Noch keine Lager vorhanden.</div>
+{% endif %}
+{% endblock %}
