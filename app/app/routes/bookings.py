@@ -9,6 +9,15 @@ from ..models.booking import Booking
 bookings_bp = Blueprint('bookings', __name__, url_prefix='/bookings')
 
 
+def _get_stock(article_id, warehouse_id):
+    """Aktuellen Bestand eines Artikels in einem Lager aus v_stock."""
+    row = db.session.execute(text(
+        "SELECT COALESCE(stock, 0) AS stock FROM v_stock "
+        "WHERE article_id = :aid AND warehouse_id = :wid"
+    ), {'aid': article_id, 'wid': warehouse_id}).fetchone()
+    return float(row.stock) if row else 0.0
+
+
 @bookings_bp.route('/incoming', methods=['GET', 'POST'])
 @login_required
 def incoming():
@@ -17,7 +26,6 @@ def incoming():
     if request.method == 'POST':
         article_code = request.form.get('article_code', '').strip()
         quantity_str = request.form.get('quantity', '').replace(',', '.')
-        price_str = request.form.get('purchase_price', '').replace(',', '.')
 
         article = Article.query.filter_by(article_id=article_code, is_active=True).first()
         if not article:
@@ -26,9 +34,8 @@ def incoming():
 
         try:
             quantity = float(quantity_str)
-            purchase_price = float(price_str) if price_str else None
         except ValueError:
-            flash('Ungültige Zahlenangabe.', 'danger')
+            flash('Ungültige Mengenangabe.', 'danger')
             return render_template('bookings/incoming.html', articles=articles)
 
         if quantity <= 0:
@@ -44,12 +51,11 @@ def incoming():
             booking_type='Einkauf',
             article_id=article.id,
             quantity=quantity,
-            purchase_price=purchase_price,
             target_warehouse_id=main_warehouse.id,
         )
         db.session.add(booking)
         db.session.commit()
-        flash(f'Einkauf von {quantity} {article.unit} „{article.name}" gebucht.', 'success')
+        flash(f'Einkauf: {quantity:g} Stk „{article.name}" eingelagert.', 'success')
         return redirect(url_for('bookings.incoming'))
 
     return render_template('bookings/incoming.html', articles=articles)
@@ -63,7 +69,7 @@ def outgoing():
     employee_warehouses = [w for w in warehouses if w.type == 'employee']
     main_warehouse = next((w for w in warehouses if w.type == 'main'), None)
 
-    # Pre-fill from URL params (z.B. von Lagerstand-Buttons)
+    # Pre-fill aus URL-Parametern (z.B. von Lagerstand-Buttons)
     prefill = {
         'article_code': request.args.get('article_code', ''),
         'booking_type': request.args.get('booking_type', ''),
@@ -113,6 +119,18 @@ def outgoing():
                 flash('Kundenname ist Pflichtfeld bei Abgang an Kunden.', 'danger')
                 return render_template('bookings/outgoing.html', **ctx)
 
+            # Negativbestand verhindern
+            current_stock = _get_stock(article.id, source_warehouse_id)
+            if quantity > current_stock:
+                wh = Warehouse.query.get(source_warehouse_id)
+                wh_name = wh.name if wh else 'Lager'
+                flash(
+                    f'Nicht genug Bestand in „{wh_name}". '
+                    f'Verfügbar: {current_stock:g} Stk – angefordert: {quantity:g} Stk.',
+                    'danger'
+                )
+                return render_template('bookings/outgoing.html', **ctx)
+
             booking = Booking(
                 booking_type='Abgang',
                 article_id=article.id,
@@ -130,6 +148,16 @@ def outgoing():
                 flash('Hauptlager nicht gefunden.', 'danger')
                 return render_template('bookings/outgoing.html', **ctx)
 
+            # Negativbestand im Hauptlager verhindern
+            current_stock = _get_stock(article.id, main_warehouse.id)
+            if quantity > current_stock:
+                flash(
+                    f'Nicht genug Bestand im Hauptlager. '
+                    f'Verfügbar: {current_stock:g} Stk – angefordert: {quantity:g} Stk.',
+                    'danger'
+                )
+                return render_template('bookings/outgoing.html', **ctx)
+
             booking = Booking(
                 booking_type='Umlagerung',
                 article_id=article.id,
@@ -143,7 +171,7 @@ def outgoing():
 
         db.session.add(booking)
         db.session.commit()
-        flash(f'{booking_type} von {quantity} {article.unit} „{article.name}" gebucht.', 'success')
+        flash(f'{booking_type}: {quantity:g} Stk „{article.name}" gebucht.', 'success')
         return redirect(url_for('bookings.outgoing'))
 
     return render_template('bookings/outgoing.html',

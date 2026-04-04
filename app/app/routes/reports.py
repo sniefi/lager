@@ -1,4 +1,3 @@
-from decimal import Decimal
 from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for
 from flask_login import login_required
@@ -14,39 +13,6 @@ reports_bp = Blueprint('reports', __name__, url_prefix='/reports')
 @login_required
 def index():
     return redirect(url_for('reports.stock'))
-
-
-def _fifo_value(article_id, warehouse_id, current_stock):
-    """
-    FIFO-Bewertung: Alle Einkäufe für diesen Artikel (ältester zuerst),
-    dann aktuellen Bestand (Stück) von vorne abbauen und Wert summieren.
-    Preis pro Stück (aus article.price).
-    """
-    # Alle Einkaufsbuchungen mit Preis, älteste zuerst
-    einkaufe = db.session.execute(text("""
-        SELECT b.quantity, a.price
-        FROM booking b
-        JOIN article a ON a.id = b.article_id
-        WHERE b.article_id = :aid
-          AND b.booking_type IN ('Einkauf', 'Inventur')
-          AND b.target_warehouse_id = :wid
-          AND a.price IS NOT NULL
-        ORDER BY b.created_at ASC
-    """), {'aid': article_id, 'wid': warehouse_id}).fetchall()
-
-    remaining = Decimal(str(current_stock))
-    total_value = Decimal('0')
-
-    for row in reversed(einkaufe):  # FIFO: neueste Einkäufe zuerst abbauen
-        if remaining <= 0:
-            break
-        qty = Decimal(str(row.quantity))
-        price = Decimal(str(row.price))
-        used = min(qty, remaining)
-        total_value += used * price
-        remaining -= used
-
-    return float(total_value)
 
 
 @reports_bp.route('/stock')
@@ -74,10 +40,8 @@ def stock():
             }
         stock_val = float(row.stock)
         price = float(row.price) if row.price else None
-        # Wert = Bestand × Preis/Stk (einfach), FIFO nur wenn Preis vorhanden
-        wert = None
-        if price is not None and stock_val > 0:
-            wert = _fifo_value(row.article_id, wid, stock_val)
+        # Wert = Bestand × Preis/Stk (ungefährer Lagerwert)
+        wert = stock_val * price if price is not None and stock_val > 0 else None
 
         warehouses[wid]['artikel'].append({
             'article_id': row.article_id,
@@ -85,7 +49,6 @@ def stock():
             'article_name': row.article_name,
             'unit': row.unit,
             'stock': stock_val,
-            'price': price,
             'wert': wert,
         })
 
@@ -165,7 +128,6 @@ def outgoing():
     ))
     years = [row.yr for row in years_result]
 
-    # Alle distinkten Kundennamen für Dropdown
     customers_result = db.session.execute(text(
         "SELECT DISTINCT customer_name FROM booking "
         "WHERE customer_name IS NOT NULL AND customer_name != '' "
