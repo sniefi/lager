@@ -8,7 +8,7 @@ class Article(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     article_id = db.Column(db.String(64), unique=True, nullable=False)
     name = db.Column(db.String(255), nullable=False)
-    unit = db.Column(db.String(32), default='Liter')
+    unit = db.Column(db.Numeric(10, 2), nullable=True)
     price = db.Column(db.Numeric(10, 2), nullable=True)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

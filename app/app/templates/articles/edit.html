@@ -25,14 +25,18 @@
                        value="{{ article.name }}" required autofocus>
             </div>
             <div class="mb-3">
-                <label for="unit" class="form-label">Einheit</label>
-                <input type="text" class="form-control form-control-lg"
-                       id="unit" name="unit"
-                       value="{{ article.unit }}"
-                       oninput="document.getElementById('price-unit-label').textContent = '/ ' + (this.value || 'Einheit')">
+                <label for="unit" class="form-label">Inhalt in Liter</label>
+                <div class="input-group input-group-lg">
+                    <input type="number" class="form-control"
+                           id="unit" name="unit"
+                           step="0.01" min="0.01"
+                           value="{{ '%.2f' | format(article.unit | float) if article.unit is not none else '' }}"
+                           placeholder="1.00">
+                    <span class="input-group-text text-muted">Liter</span>
+                </div>
             </div>
             <div class="mb-4">
-                <label for="price" class="form-label">Preis <span class="text-muted fw-normal">(optional)</span></label>
+                <label for="price" class="form-label">Preis / Liter <span class="text-muted fw-normal">(optional)</span></label>
                 <div class="input-group input-group-lg">
                     <span class="input-group-text">€</span>
                     <input type="number" class="form-control"
@@ -40,7 +44,7 @@
                            step="0.01" min="0"
                            value="{{ '%.2f' | format(article.price | float) if article.price is not none else '' }}"
                            placeholder="0.00">
-                    <span class="input-group-text text-muted" id="price-unit-label">/ {{ article.unit }}</span>
+                    <span class="input-group-text text-muted">/ Liter</span>
                 </div>
             </div>
             <div class="d-flex gap-2 mb-4">

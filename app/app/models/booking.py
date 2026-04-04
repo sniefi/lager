@@ -6,7 +6,7 @@ class Booking(db.Model):
     __tablename__ = 'booking'
 
     id = db.Column(db.Integer, primary_key=True)
-    booking_type = db.Column(db.Enum('Einkauf', 'Abgang', 'Umlagerung'), nullable=False)
+    booking_type = db.Column(db.Enum('Einkauf', 'Abgang', 'Umlagerung', 'Inventur'), nullable=False)
     article_id = db.Column(db.Integer, db.ForeignKey('article.id'), nullable=False)
     quantity = db.Column(db.Numeric(12, 4), nullable=False)
     purchase_price = db.Column(db.Numeric(10, 4), nullable=True)

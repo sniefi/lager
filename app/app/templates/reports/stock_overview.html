@@ -24,20 +24,25 @@
                     <tr>
                         <th>Artikelcode</th>
                         <th>Bezeichnung</th>
-                        <th class="text-end">Bestand</th>
-                        <th>Einheit</th>
+                        <th class="text-end">Bestand (Einh.)</th>
+                        <th class="text-end">Liter gesamt</th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in w.artikel %}
+                    {% set unit_f = (item.unit | float) if item.unit else 0 %}
                     <tr>
                         <td><code>{{ item.article_code }}</code></td>
                         <td>{{ item.article_name }}</td>
                         <td class="text-end {% if item.stock < 0 %}text-danger fw-bold{% endif %}">
                             {{ '%.4g' | format(item.stock) }}
                         </td>
-                        <td>{{ item.unit }}</td>
+                        <td class="text-end text-muted">
+                            {% if unit_f %}
+                            {{ '%.2f' | format(item.stock * unit_f) }} L
+                            {% else %}–{% endif %}
+                        </td>
                         <td class="text-end">
                             {% if w.type == 'employee' %}
                             <a href="{{ url_for('bookings.outgoing', article_code=item.article_code, source_warehouse_id=w.id, booking_type='Abgang', destination='Eigenbedarf') }}"
@@ -50,6 +55,21 @@
                     </tr>
                     {% endfor %}
                 </tbody>
+                {% set ns = namespace(total_liter=0.0) %}
+                {% for item in w.artikel %}
+                    {% if item.unit %}
+                        {% set ns.total_liter = ns.total_liter + (item.stock | float) * (item.unit | float) %}
+                    {% endif %}
+                {% endfor %}
+                {% if ns.total_liter %}
+                <tfoot class="table-secondary fw-semibold">
+                    <tr>
+                        <td colspan="3" class="text-end">Gesamt:</td>
+                        <td class="text-end">{{ '%.2f' | format(ns.total_liter) }} L</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+                {% endif %}
             </table>
         </div>
     </div>

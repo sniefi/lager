@@ -24,6 +24,8 @@
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="{{ url_for('bookings.incoming') }}">Einkauf / Einlagerung</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('bookings.outgoing') }}">Abgang / Umlagerung</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('inventur.index') }}">Inventur</a></li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
@@ -31,6 +33,8 @@
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="{{ url_for('reports.stock') }}">Lagerstand</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('reports.outgoing') }}">Abgangsliste</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('inventur.report') }}">Inventurauswertung</a></li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
@@ -69,5 +73,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>

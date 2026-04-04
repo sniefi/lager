@@ -15,9 +15,27 @@ CREATE TABLE IF NOT EXISTS warehouse (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS inventur (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS inventur_position (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    inventur_id INT NOT NULL,
+    article_id INT NOT NULL,
+    warehouse_id INT NOT NULL,
+    quantity_before DECIMAL(12,4) NOT NULL,
+    quantity_after DECIMAL(12,4) NOT NULL,
+    difference DECIMAL(12,4) NOT NULL,
+    FOREIGN KEY (inventur_id) REFERENCES inventur(id),
+    FOREIGN KEY (article_id) REFERENCES article(id),
+    FOREIGN KEY (warehouse_id) REFERENCES warehouse(id)
+);
+
 CREATE TABLE IF NOT EXISTS booking (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    booking_type ENUM('Einkauf', 'Abgang', 'Umlagerung') NOT NULL,
+    booking_type ENUM('Einkauf', 'Abgang', 'Umlagerung', 'Inventur') NOT NULL,
     article_id INT NOT NULL,
     quantity DECIMAL(12,4) NOT NULL,
     purchase_price DECIMAL(10,4) NULL,

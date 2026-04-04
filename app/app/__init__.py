@@ -16,12 +16,14 @@ def create_app():
     from .routes.warehouses import warehouses_bp
     from .routes.bookings import bookings_bp
     from .routes.reports import reports_bp
+    from .routes.inventur import inventur_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(articles_bp)
     app.register_blueprint(warehouses_bp)
     app.register_blueprint(bookings_bp)
     app.register_blueprint(reports_bp)
+    app.register_blueprint(inventur_bp)
 
     @app.route('/')
     def index():

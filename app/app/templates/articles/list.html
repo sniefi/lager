@@ -13,8 +13,8 @@
             <tr>
                 <th>Artikelcode</th>
                 <th>Name</th>
-                <th>Einheit</th>
-                <th class="text-end">Preis</th>
+                <th class="text-end">Inhalt in Liter</th>
+                <th class="text-end">Preis / Liter</th>
                 <th class="text-center">Status</th>
                 <th></th>
             </tr>
@@ -28,7 +28,13 @@
                     </a>
                 </td>
                 <td>{{ a.name }}</td>
-                <td>{{ a.unit }}</td>
+                <td class="text-end">
+                    {% if a.unit is not none %}
+                    {{ '%.2f' | format(a.unit | float) }} L
+                    {% else %}
+                    <span class="text-muted">–</span>
+                    {% endif %}
+                </td>
                 <td class="text-end">
                     {% if a.price is not none %}
                     {{ '%.2f' | format(a.price | float) }} €

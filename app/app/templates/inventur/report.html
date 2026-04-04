@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}Inventurauswertung – Lagerverwaltung{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Inventurauswertung</h2>
+    <a href="{{ url_for('inventur.index') }}" class="btn btn-outline-primary btn-sm">+ Neue Inventur</a>
+</div>
+
+<form method="get" class="row g-2 mb-4">
+    <div class="col-auto">
+        <select class="form-select" name="year">
+            <option value="">Alle Jahre</option>
+            {% for y in years %}
+            <option value="{{ y }}" {% if selected_year == y %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-auto d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Filtern</button>
+        <a href="{{ url_for('inventur.report') }}" class="btn btn-outline-secondary">&#x2715;</a>
+    </div>
+</form>
+
+{% if grouped %}
+{% set ns = namespace(einh_neg=0.0, liter_neg=0.0, val_neg=0.0, einh_pos=0.0, liter_pos=0.0, val_pos=0.0) %}
+
+{% for g in grouped %}
+<div class="card mb-4">
+    <div class="card-header d-flex align-items-center gap-3">
+        <strong>Inventur #{{ g.inv_id }}</strong>
+        <span class="text-muted">{{ g.inv_date.strftime('%d.%m.%Y %H:%M') }}</span>
+        <span class="badge bg-secondary ms-auto">{{ g.positions | length }} Position(en)</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Artikel</th>
+                    <th class="text-end">L/Einh.</th>
+                    <th class="text-end">Vorher</th>
+                    <th class="text-end">Nachher</th>
+                    <th class="text-end">Diff. (Einh.)</th>
+                    <th class="text-end">Diff. (Liter)</th>
+                    <th class="text-end">Wert (€)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in g.positions %}
+                {% set diff_f = p.difference | float %}
+                {% set unit_f = (p.unit | float) if p.unit else 0.0 %}
+                {% set price_f = (p.price | float) if p.price else 0.0 %}
+                {% set diff_liter = diff_f * unit_f %}
+                {% set val = diff_liter * price_f %}
+                {% if diff_f < 0 %}
+                    {% set ns.einh_neg = ns.einh_neg + diff_f %}
+                    {% set ns.liter_neg = ns.liter_neg + diff_liter %}
+                    {% set ns.val_neg = ns.val_neg + val %}
+                {% elif diff_f > 0 %}
+                    {% set ns.einh_pos = ns.einh_pos + diff_f %}
+                    {% set ns.liter_pos = ns.liter_pos + diff_liter %}
+                    {% set ns.val_pos = ns.val_pos + val %}
+                {% endif %}
+                <tr class="{% if diff_f < 0 %}table-danger{% elif diff_f > 0 %}table-success{% endif %}">
+                    <td>
+                        <span class="fw-semibold">{{ p.article_code }}</span>
+                        <small class="text-muted ms-1">{{ p.article_name }}</small>
+                    </td>
+                    <td class="text-end text-muted">
+                        {% if p.unit %}{{ '%.2f' | format(unit_f) }}{% else %}–{% endif %}
+                    </td>
+                    <td class="text-end">{{ '%.4g' | format(p.quantity_before | float) }}</td>
+                    <td class="text-end">{{ '%.4g' | format(p.quantity_after | float) }}</td>
+                    <td class="text-end fw-semibold {% if diff_f < 0 %}text-danger{% else %}text-success{% endif %}">
+                        {% if diff_f > 0 %}+{% endif %}{{ '%.4g' | format(diff_f) }}
+                    </td>
+                    <td class="text-end {% if diff_liter < 0 %}text-danger{% else %}text-success{% endif %}">
+                        {% if unit_f %}
+                            {% if diff_liter > 0 %}+{% endif %}{{ '%.2f' | format(diff_liter) }} L
+                        {% else %}–{% endif %}
+                    </td>
+                    <td class="text-end {% if val < 0 %}text-danger{% else %}text-success{% endif %}">
+                        {% if price_f and unit_f %}
+                            {% if val > 0 %}+{% endif %}{{ '%.2f' | format(val) }} €
+                        {% else %}–{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Gesamtübersicht -->
+<div class="card border-dark mt-2">
+    <div class="card-header bg-dark text-white">
+        <strong>Gesamtübersicht{% if selected_year %} {{ selected_year }}{% endif %}</strong>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-6 col-md-3 border-end">
+                <div class="text-muted small mb-1">Schwund (Einheiten)</div>
+                <div class="fs-4 fw-bold text-danger">{{ '%.2f' | format(ns.einh_neg) }}</div>
+            </div>
+            <div class="col-6 col-md-3 border-end">
+                <div class="text-muted small mb-1">Schwund (Liter)</div>
+                <div class="fs-4 fw-bold text-danger">{{ '%.2f' | format(ns.liter_neg) }} L</div>
+            </div>
+            <div class="col-6 col-md-3 border-end">
+                <div class="text-muted small mb-1">Schwundwert</div>
+                <div class="fs-4 fw-bold text-danger">{{ '%.2f' | format(ns.val_neg) }} €</div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="text-muted small mb-1">Korrekturen positiv</div>
+                <div class="fs-4 fw-bold text-success">+{{ '%.2f' | format(ns.liter_pos) }} L / {{ '%.2f' | format(ns.val_pos) }} €</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="alert alert-info">
+    Noch keine Inventuren vorhanden{% if selected_year %} für {{ selected_year }}{% endif %}.
+    <a href="{{ url_for('inventur.index') }}" class="alert-link">Jetzt Inventur durchführen</a>
+</div>
+{% endif %}
+{% endblock %}
