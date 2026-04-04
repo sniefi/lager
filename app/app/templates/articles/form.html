@@ -18,11 +18,23 @@
                        id="name" name="name"
                        placeholder="z.B. Motoröl 5W-30" required>
             </div>
-            <div class="mb-4">
+            <div class="mb-3">
                 <label for="unit" class="form-label">Einheit</label>
                 <input type="text" class="form-control form-control-lg"
                        id="unit" name="unit"
-                       value="Liter" placeholder="Liter">
+                       value="Liter" placeholder="Liter"
+                       oninput="document.getElementById('price-unit-label').textContent = '/ ' + (this.value || 'Einheit')">
+            </div>
+            <div class="mb-4">
+                <label for="price" class="form-label">Preis <span class="text-muted fw-normal">(optional)</span></label>
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text">€</span>
+                    <input type="number" class="form-control"
+                           id="price" name="price"
+                           step="0.01" min="0"
+                           placeholder="0.00">
+                    <span class="input-group-text text-muted" id="price-unit-label">/ Liter</span>
+                </div>
             </div>
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-success btn-lg flex-grow-1">Speichern</button>

@@ -4,7 +4,9 @@
     <select class="form-select form-select-lg" id="source_warehouse_id" name="source_warehouse_id" required>
         <option value="">— Lager wählen —</option>
         {% for w in warehouses %}
-        <option value="{{ w.id }}">{{ w.name }}{% if w.type == 'main' %} (Hauptlager){% endif %}</option>
+        <option value="{{ w.id }}" {% if prefill_source == w.id %}selected{% endif %}>
+            {{ w.name }}{% if w.type == 'main' %} (Hauptlager){% endif %}
+        </option>
         {% endfor %}
     </select>
 </div>
@@ -19,17 +21,25 @@
             hx-trigger="change"
             required>
         <option value="">— Abgangsart wählen —</option>
-        <option value="Eigenbedarf">Eigenbedarf</option>
-        <option value="Kunde">Kunde</option>
+        <option value="Eigenbedarf" {% if prefill_destination == 'Eigenbedarf' %}selected{% endif %}>Eigenbedarf</option>
+        <option value="Kunde" {% if prefill_destination == 'Kunde' %}selected{% endif %}>Kunde</option>
     </select>
 </div>
 
+{% if prefill_destination %}
+<div id="destination-specific"
+     hx-get="{{ url_for('bookings.destination_fields') }}?abgang_destination={{ prefill_destination }}"
+     hx-trigger="load">
+</div>
+{% else %}
 <div id="destination-specific"></div>
+{% endif %}
 
 {% elif booking_type == 'Umlagerung' %}
 <div class="mb-3">
     <label class="form-label fw-semibold">Quelle</label>
-    <input type="text" class="form-control form-control-lg" value="{% if main_warehouse %}{{ main_warehouse.name }}{% else %}Hauptlager{% endif %}" disabled>
+    <input type="text" class="form-control form-control-lg bg-light"
+           value="{% if main_warehouse %}{{ main_warehouse.name }}{% else %}Hauptlager{% endif %}" disabled>
     {% if main_warehouse %}
     <input type="hidden" name="source_warehouse_id" value="{{ main_warehouse.id }}">
     {% endif %}

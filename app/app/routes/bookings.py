@@ -12,16 +12,16 @@ bookings_bp = Blueprint('bookings', __name__, url_prefix='/bookings')
 @bookings_bp.route('/incoming', methods=['GET', 'POST'])
 @login_required
 def incoming():
-    articles = Article.query.order_by(Article.article_id).all()
+    articles = Article.query.filter_by(is_active=True).order_by(Article.article_id).all()
 
     if request.method == 'POST':
         article_code = request.form.get('article_code', '').strip()
         quantity_str = request.form.get('quantity', '').replace(',', '.')
         price_str = request.form.get('purchase_price', '').replace(',', '.')
 
-        article = Article.query.filter_by(article_id=article_code).first()
+        article = Article.query.filter_by(article_id=article_code, is_active=True).first()
         if not article:
-            flash(f'Artikel „{article_code}" nicht gefunden.', 'danger')
+            flash(f'Artikel „{article_code}" nicht gefunden oder inaktiv.', 'danger')
             return render_template('bookings/incoming.html', articles=articles)
 
         try:
@@ -58,10 +58,21 @@ def incoming():
 @bookings_bp.route('/outgoing', methods=['GET', 'POST'])
 @login_required
 def outgoing():
-    articles = Article.query.order_by(Article.article_id).all()
+    articles = Article.query.filter_by(is_active=True).order_by(Article.article_id).all()
     warehouses = Warehouse.query.order_by(Warehouse.type, Warehouse.name).all()
     employee_warehouses = [w for w in warehouses if w.type == 'employee']
     main_warehouse = next((w for w in warehouses if w.type == 'main'), None)
+
+    # Pre-fill from URL params (z.B. von Lagerstand-Buttons)
+    prefill = {
+        'article_code': request.args.get('article_code', ''),
+        'booking_type': request.args.get('booking_type', ''),
+        'source_warehouse_id': request.args.get('source_warehouse_id', type=int),
+        'destination': request.args.get('destination', ''),
+    }
+    prefill_article = None
+    if prefill['article_code']:
+        prefill_article = Article.query.filter_by(article_id=prefill['article_code']).first()
 
     if request.method == 'POST':
         booking_type = request.form.get('booking_type', '')
@@ -72,7 +83,9 @@ def outgoing():
         customer_name = request.form.get('customer_name', '').strip()
         target_warehouse_id = request.form.get('target_warehouse_id', type=int)
 
-        ctx = dict(articles=articles, warehouses=warehouses, employee_warehouses=employee_warehouses, main_warehouse=main_warehouse)
+        ctx = dict(articles=articles, warehouses=warehouses,
+                   employee_warehouses=employee_warehouses, main_warehouse=main_warehouse,
+                   prefill={}, prefill_article=None)
 
         article = Article.query.filter_by(article_id=article_code).first()
         if not article:
@@ -137,7 +150,9 @@ def outgoing():
                            articles=articles,
                            warehouses=warehouses,
                            employee_warehouses=employee_warehouses,
-                           main_warehouse=main_warehouse)
+                           main_warehouse=main_warehouse,
+                           prefill=prefill,
+                           prefill_article=prefill_article)
 
 
 # HTMX: Bedingte Felder je nach Buchungsart
@@ -145,6 +160,8 @@ def outgoing():
 @login_required
 def type_fields():
     booking_type = request.args.get('booking_type', '')
+    prefill_source = request.args.get('source_warehouse_id', type=int)
+    prefill_destination = request.args.get('destination', '')
     warehouses = Warehouse.query.order_by(Warehouse.type, Warehouse.name).all()
     employee_warehouses = [w for w in warehouses if w.type == 'employee']
     main_warehouse = next((w for w in warehouses if w.type == 'main'), None)
@@ -152,7 +169,9 @@ def type_fields():
                            booking_type=booking_type,
                            warehouses=warehouses,
                            employee_warehouses=employee_warehouses,
-                           main_warehouse=main_warehouse)
+                           main_warehouse=main_warehouse,
+                           prefill_source=prefill_source,
+                           prefill_destination=prefill_destination)
 
 
 # HTMX: Kundenname-Feld
@@ -164,18 +183,21 @@ def destination_fields():
                            abgang_destination=abgang_destination)
 
 
-# HTMX API: Artikel-Autocomplete
+# HTMX API: Artikel-Autocomplete (Dropdown)
 @bookings_bp.route('/api/articles/search')
 @login_required
 def article_search():
-    q = request.args.get('q', '') or request.args.get('article_code', '')
+    q = request.args.get('q', '')
+    if not q:
+        return ''
     articles = Article.query.filter(
+        Article.is_active == True,
         db.or_(
             Article.article_id.ilike(f'%{q}%'),
             Article.name.ilike(f'%{q}%'),
         )
     ).order_by(Article.article_id).limit(15).all()
-    return render_template('bookings/_article_options.html', articles=articles)
+    return render_template('bookings/_article_dropdown.html', articles=articles)
 
 
 # HTMX API: Kunden-Autocomplete

@@ -15,7 +15,7 @@
             {% else %}
             <span class="badge bg-secondary">Mitarbeiterlager</span>
             <a href="{{ url_for('reports.employee_detail', warehouse_id=w.id) }}"
-               class="btn btn-sm btn-outline-light ms-auto">Eigenbedarf</a>
+               class="btn btn-sm btn-outline-light ms-auto">Eigenbedarf-Liste</a>
             {% endif %}
         </div>
         <div class="table-responsive">
@@ -26,6 +26,7 @@
                         <th>Bezeichnung</th>
                         <th class="text-end">Bestand</th>
                         <th>Einheit</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -37,6 +38,15 @@
                             {{ '%.4g' | format(item.stock) }}
                         </td>
                         <td>{{ item.unit }}</td>
+                        <td class="text-end">
+                            {% if w.type == 'employee' %}
+                            <a href="{{ url_for('bookings.outgoing', article_code=item.article_code, source_warehouse_id=w.id, booking_type='Abgang', destination='Eigenbedarf') }}"
+                               class="btn btn-sm btn-outline-warning">Eigenbedarf</a>
+                            {% else %}
+                            <a href="{{ url_for('bookings.outgoing', article_code=item.article_code, source_warehouse_id=w.id, booking_type='Abgang') }}"
+                               class="btn btn-sm btn-outline-danger">Abgang</a>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

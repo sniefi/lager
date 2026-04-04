@@ -3,6 +3,8 @@ CREATE TABLE IF NOT EXISTS article (
     article_id VARCHAR(64) UNIQUE NOT NULL,
     name VARCHAR(255) NOT NULL,
     unit VARCHAR(32) DEFAULT 'Liter',
+    price DECIMAL(10,2) NULL,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

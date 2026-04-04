@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}{{ article.article_id }} bearbeiten – Lagerverwaltung{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12 col-md-6">
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <a href="{{ url_for('articles.list') }}" class="btn btn-sm btn-outline-secondary">&larr;</a>
+            <h2 class="mb-0">{{ article.article_id }} bearbeiten</h2>
+            {% if not article.is_active %}
+            <span class="badge bg-secondary">Inaktiv</span>
+            {% endif %}
+        </div>
+
+        <form method="post">
+            <div class="mb-3">
+                <label class="form-label text-muted">Artikelcode</label>
+                <input type="text" class="form-control form-control-lg bg-light"
+                       value="{{ article.article_id }}" disabled>
+                <div class="form-text">Artikelcode kann nicht geändert werden.</div>
+            </div>
+            <div class="mb-3">
+                <label for="name" class="form-label">Bezeichnung *</label>
+                <input type="text" class="form-control form-control-lg"
+                       id="name" name="name"
+                       value="{{ article.name }}" required autofocus>
+            </div>
+            <div class="mb-3">
+                <label for="unit" class="form-label">Einheit</label>
+                <input type="text" class="form-control form-control-lg"
+                       id="unit" name="unit"
+                       value="{{ article.unit }}"
+                       oninput="document.getElementById('price-unit-label').textContent = '/ ' + (this.value || 'Einheit')">
+            </div>
+            <div class="mb-4">
+                <label for="price" class="form-label">Preis <span class="text-muted fw-normal">(optional)</span></label>
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text">€</span>
+                    <input type="number" class="form-control"
+                           id="price" name="price"
+                           step="0.01" min="0"
+                           value="{{ '%.2f' | format(article.price | float) if article.price is not none else '' }}"
+                           placeholder="0.00">
+                    <span class="input-group-text text-muted" id="price-unit-label">/ {{ article.unit }}</span>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mb-4">
+                <button type="submit" class="btn btn-success btn-lg flex-grow-1">Speichern</button>
+                <a href="{{ url_for('articles.list') }}" class="btn btn-outline-secondary btn-lg">Abbrechen</a>
+            </div>
+        </form>
+
+        <hr>
+        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+            <div>
+                <strong>Status:</strong>
+                {% if article.is_active %}
+                <span class="badge bg-success ms-1">Aktiv</span>
+                <span class="text-muted small ms-2">Artikel kann eingekauft werden</span>
+                {% else %}
+                <span class="badge bg-secondary ms-1">Inaktiv</span>
+                <span class="text-muted small ms-2">Nicht für Einkauf verfügbar</span>
+                {% endif %}
+            </div>
+            <form method="post" action="{{ url_for('articles.toggle_active', pk=article.id) }}">
+                {% if article.is_active %}
+                <button type="submit" class="btn btn-outline-warning"
+                        onclick="return confirm('Artikel „{{ article.name }}" deaktivieren?')">
+                    Deaktivieren
+                </button>
+                {% else %}
+                <button type="submit" class="btn btn-outline-success">
+                    Aktivieren
+                </button>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

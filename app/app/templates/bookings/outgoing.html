@@ -6,7 +6,7 @@
         <h2 class="mb-1">Abgang / Umlagerung</h2>
         <p class="text-muted mb-3">Ware aus einem Lager entnehmen oder umlagern.</p>
 
-        <form method="post">
+        <form method="post" id="outgoing-form">
             <div class="mb-3">
                 <label for="booking_type" class="form-label fw-semibold">Buchungsart *</label>
                 <select class="form-select form-select-lg"
@@ -15,31 +15,33 @@
                         hx-get="{{ url_for('bookings.type_fields') }}"
                         hx-target="#type-specific-fields"
                         hx-trigger="change"
+                        hx-include="[name='source_warehouse_id'],[name='destination_hint']"
                         required>
                     <option value="">— Buchungsart wählen —</option>
-                    <option value="Abgang">Abgang</option>
-                    <option value="Umlagerung">Umlagerung (Hauptlager → Mitarbeiterlager)</option>
+                    <option value="Abgang" {% if prefill.booking_type == 'Abgang' %}selected{% endif %}>Abgang</option>
+                    <option value="Umlagerung" {% if prefill.booking_type == 'Umlagerung' %}selected{% endif %}>Umlagerung (Hauptlager → Mitarbeiterlager)</option>
                 </select>
             </div>
 
+            <!-- Artikel-Suche -->
             <div class="mb-3">
-                <label for="article_code" class="form-label fw-semibold">Artikel *</label>
-                <input type="text"
-                       class="form-control form-control-lg"
-                       id="article_code"
-                       name="article_code"
-                       list="article-datalist"
-                       hx-get="{{ url_for('bookings.article_search') }}"
-                       hx-target="#article-datalist"
-                       hx-trigger="input changed delay:300ms"
-                       autocomplete="off"
-                       placeholder="Artikelcode eingeben…"
-                       required>
-                <datalist id="article-datalist">
-                    {% for a in articles %}
-                    <option value="{{ a.article_id }}">{{ a.name }}</option>
-                    {% endfor %}
-                </datalist>
+                <label class="form-label fw-semibold">Artikel *</label>
+                <div class="position-relative">
+                    <input type="text"
+                           class="form-control form-control-lg"
+                           id="article_search"
+                           name="q"
+                           autocomplete="off"
+                           placeholder="Artikelcode oder Name eingeben…"
+                           value="{{ prefill_article.name + ' (' + prefill.article_code + ')' if prefill_article else '' }}"
+                           hx-get="{{ url_for('bookings.article_search') }}"
+                           hx-trigger="input changed delay:200ms"
+                           hx-target="#article-results">
+                    <input type="hidden" id="article_code" name="article_code"
+                           value="{{ prefill.article_code }}">
+                    <div id="article-results" class="position-absolute w-100" style="z-index:9999;top:100%;"></div>
+                </div>
+                <div class="form-text">Mindestens 1 Zeichen eingeben – Code oder Name</div>
             </div>
 
             <div class="mb-3">
@@ -48,18 +50,61 @@
                        class="form-control form-control-lg"
                        id="quantity"
                        name="quantity"
-                       min="0.0001"
-                       step="any"
+                       min="0.01"
+                       step="0.01"
                        inputmode="decimal"
-                       placeholder="0,00"
+                       placeholder="0.00"
                        required>
             </div>
 
-            <!-- HTMX tauscht diesen Block je nach Buchungsart -->
-            <div id="type-specific-fields"></div>
+            <!-- Versteckte Hinweise für HTMX pre-fill (werden beim manuellen Trigger mitgeschickt) -->
+            <input type="hidden" name="source_warehouse_id_hint" value="{{ prefill.source_warehouse_id or '' }}">
+            <input type="hidden" name="destination_hint" value="{{ prefill.destination }}">
 
-            <button type="submit" class="btn btn-warning btn-lg w-100 mt-2">Buchen</button>
+            <!-- HTMX: Typ-spezifische Felder -->
+            {% if prefill.booking_type %}
+            <div id="type-specific-fields"
+                 hx-get="/bookings/type-fields?booking_type={{ prefill.booking_type }}&source_warehouse_id={{ prefill.source_warehouse_id or '' }}&destination={{ prefill.destination }}"
+                 hx-trigger="load">
+            </div>
+            {% else %}
+            <div id="type-specific-fields"></div>
+            {% endif %}
+
+            <button type="submit" class="btn btn-warning btn-lg w-100 mt-2"
+                    onclick="return validateArticle()">Buchen</button>
         </form>
     </div>
 </div>
+
+<script>
+function validateArticle() {
+    const code = document.getElementById('article_code').value;
+    if (!code) {
+        document.getElementById('article_search').classList.add('is-invalid');
+        document.getElementById('article_search').focus();
+        return false;
+    }
+    return true;
+}
+
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.article-pick-btn');
+    if (btn) {
+        document.getElementById('article_code').value = btn.dataset.code;
+        document.getElementById('article_search').value = btn.dataset.name + ' (' + btn.dataset.code + ')';
+        document.getElementById('article_search').classList.remove('is-invalid');
+        document.getElementById('article-results').innerHTML = '';
+        return;
+    }
+    if (!e.target.closest('#article-results') && e.target.id !== 'article_search') {
+        const r = document.getElementById('article-results');
+        if (r) r.innerHTML = '';
+    }
+});
+
+document.getElementById('article_search').addEventListener('input', function() {
+    document.getElementById('article_code').value = '';
+});
+</script>
 {% endblock %}

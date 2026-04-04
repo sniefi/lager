@@ -14,16 +14,39 @@
                 <th>Artikelcode</th>
                 <th>Name</th>
                 <th>Einheit</th>
-                <th>Angelegt</th>
+                <th class="text-end">Preis</th>
+                <th class="text-center">Status</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
             {% for a in articles %}
-            <tr>
-                <td><code>{{ a.article_id }}</code></td>
+            <tr class="{% if not a.is_active %}text-muted{% endif %}">
+                <td>
+                    <a href="{{ url_for('articles.edit', pk=a.id) }}" class="text-decoration-none">
+                        <code>{{ a.article_id }}</code>
+                    </a>
+                </td>
                 <td>{{ a.name }}</td>
                 <td>{{ a.unit }}</td>
-                <td class="text-muted small">{{ a.created_at.strftime('%d.%m.%Y') }}</td>
+                <td class="text-end">
+                    {% if a.price is not none %}
+                    {{ '%.2f' | format(a.price | float) }} €
+                    {% else %}
+                    <span class="text-muted">–</span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    {% if a.is_active %}
+                    <span class="badge bg-success">Aktiv</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Inaktiv</span>
+                    {% endif %}
+                </td>
+                <td class="text-end">
+                    <a href="{{ url_for('articles.edit', pk=a.id) }}"
+                       class="btn btn-sm btn-outline-primary">Bearbeiten</a>
+                </td>
             </tr>
             {% endfor %}
         </tbody>

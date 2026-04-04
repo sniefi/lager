@@ -1,0 +1,14 @@
+{% if articles %}
+<div class="list-group shadow-sm" style="border-radius:0 0 .375rem .375rem;max-height:250px;overflow-y:auto;">
+    {% for a in articles %}
+    <button type="button"
+            class="list-group-item list-group-item-action py-2 px-3 article-pick-btn"
+            data-code="{{ a.article_id }}"
+            data-name="{{ a.name }}">
+        <span class="fw-semibold text-primary">{{ a.article_id }}</span>
+        <span class="ms-2">{{ a.name }}</span>
+        <small class="text-muted ms-1">({{ a.unit }})</small>
+    </button>
+    {% endfor %}
+</div>
+{% endif %}

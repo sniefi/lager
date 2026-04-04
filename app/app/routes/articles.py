@@ -20,6 +20,7 @@ def new():
         article_id = request.form.get('article_id', '').strip()
         name = request.form.get('name', '').strip()
         unit = request.form.get('unit', 'Liter').strip() or 'Liter'
+        price_str = request.form.get('price', '').replace(',', '.')
 
         if not article_id or not name:
             flash('Artikelcode und Name sind Pflichtfelder.', 'danger')
@@ -29,10 +30,60 @@ def new():
             flash(f'Artikelcode „{article_id}" existiert bereits.', 'danger')
             return render_template('articles/form.html')
 
-        article = Article(article_id=article_id, name=name, unit=unit)
+        price = None
+        if price_str:
+            try:
+                price = float(price_str)
+            except ValueError:
+                flash('Ungültiger Preis.', 'danger')
+                return render_template('articles/form.html')
+
+        article = Article(article_id=article_id, name=name, unit=unit, price=price)
         db.session.add(article)
         db.session.commit()
         flash(f'Artikel „{name}" wurde angelegt.', 'success')
         return redirect(url_for('articles.list'))
 
     return render_template('articles/form.html')
+
+
+@articles_bp.route('/<int:pk>/edit', methods=['GET', 'POST'])
+@login_required
+def edit(pk):
+    article = db.get_or_404(Article, pk)
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        unit = request.form.get('unit', 'Liter').strip() or 'Liter'
+        price_str = request.form.get('price', '').replace(',', '.')
+
+        if not name:
+            flash('Name ist Pflichtfeld.', 'danger')
+            return render_template('articles/edit.html', article=article)
+
+        price = None
+        if price_str:
+            try:
+                price = float(price_str)
+            except ValueError:
+                flash('Ungültiger Preis.', 'danger')
+                return render_template('articles/edit.html', article=article)
+
+        article.name = name
+        article.unit = unit
+        article.price = price
+        db.session.commit()
+        flash(f'Artikel „{article.name}" wurde gespeichert.', 'success')
+        return redirect(url_for('articles.list'))
+
+    return render_template('articles/edit.html', article=article)
+
+
+@articles_bp.route('/<int:pk>/toggle-active', methods=['POST'])
+@login_required
+def toggle_active(pk):
+    article = db.get_or_404(Article, pk)
+    article.is_active = not article.is_active
+    db.session.commit()
+    status = 'aktiviert' if article.is_active else 'deaktiviert'
+    flash(f'Artikel „{article.name}" wurde {status}.', 'success' if article.is_active else 'warning')
+    return redirect(url_for('articles.edit', pk=pk))
