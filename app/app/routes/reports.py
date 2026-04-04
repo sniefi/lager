@@ -34,9 +34,9 @@ def stock():
                 'id': wid,
                 'name': row.warehouse_name,
                 'type': row.warehouse_type,
-                'items': [],
+                'artikel': [],
             }
-        warehouses[wid]['items'].append({
+        warehouses[wid]['artikel'].append({
             'article_id': row.article_id,
             'article_code': row.article_code,
             'article_name': row.article_name,
