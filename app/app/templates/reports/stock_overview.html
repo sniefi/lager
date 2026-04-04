@@ -24,8 +24,9 @@
                     <tr>
                         <th>Artikelcode</th>
                         <th>Bezeichnung</th>
-                        <th class="text-end">Bestand (Einh.)</th>
+                        <th class="text-end">Bestand (Stk)</th>
                         <th class="text-end">Liter gesamt</th>
+                        <th class="text-end">Wert (€)</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -44,9 +45,16 @@
                             {% else %}–{% endif %}
                         </td>
                         <td class="text-end">
+                            {% if item.wert is not none %}
+                            {{ '%.2f' | format(item.wert) }} €
+                            {% else %}<span class="text-muted">–</span>{% endif %}
+                        </td>
+                        <td class="text-end text-nowrap">
                             {% if w.type == 'employee' %}
                             <a href="{{ url_for('bookings.outgoing', article_code=item.article_code, source_warehouse_id=w.id, booking_type='Abgang', destination='Eigenbedarf') }}"
-                               class="btn btn-sm btn-outline-warning">Eigenbedarf</a>
+                               class="btn btn-sm btn-outline-warning me-1">Eigenbedarf</a>
+                            <a href="{{ url_for('bookings.outgoing', article_code=item.article_code, source_warehouse_id=w.id, booking_type='Abgang') }}"
+                               class="btn btn-sm btn-outline-danger">Abgang</a>
                             {% else %}
                             <a href="{{ url_for('bookings.outgoing', article_code=item.article_code, source_warehouse_id=w.id, booking_type='Abgang') }}"
                                class="btn btn-sm btn-outline-danger">Abgang</a>
@@ -55,21 +63,19 @@
                     </tr>
                     {% endfor %}
                 </tbody>
-                {% set ns = namespace(total_liter=0.0) %}
+                {% set ns = namespace(total_liter=0.0, total_wert=0.0, has_wert=false) %}
                 {% for item in w.artikel %}
-                    {% if item.unit %}
-                        {% set ns.total_liter = ns.total_liter + (item.stock | float) * (item.unit | float) %}
-                    {% endif %}
+                    {% if item.unit %}{% set ns.total_liter = ns.total_liter + (item.stock | float) * (item.unit | float) %}{% endif %}
+                    {% if item.wert is not none %}{% set ns.total_wert = ns.total_wert + item.wert %}{% set ns.has_wert = true %}{% endif %}
                 {% endfor %}
-                {% if ns.total_liter %}
                 <tfoot class="table-secondary fw-semibold">
                     <tr>
                         <td colspan="3" class="text-end">Gesamt:</td>
                         <td class="text-end">{{ '%.2f' | format(ns.total_liter) }} L</td>
+                        <td class="text-end">{% if ns.has_wert %}{{ '%.2f' | format(ns.total_wert) }} €{% else %}–{% endif %}</td>
                         <td></td>
                     </tr>
                 </tfoot>
-                {% endif %}
             </table>
         </div>
     </div>

@@ -20,7 +20,6 @@
                     <th class="text-end">Einheit</th>
                     <th class="text-end text-nowrap">Aktueller Bestand</th>
                     <th class="text-end" style="min-width:140px;">Neuer Bestand</th>
-                    <th class="text-end text-muted small">Akt. Liter</th>
                 </tr>
             </thead>
             <tbody>
@@ -42,11 +41,6 @@
                                min="0"
                                placeholder="{{ '%.4g' | format(row.stock | float) }}"
                                autocomplete="off">
-                    </td>
-                    <td class="text-end text-muted small">
-                        {% if row.unit and row.stock %}
-                        {{ '%.2f' | format((row.stock | float) * (row.unit | float)) }}
-                        {% else %}–{% endif %}
                     </td>
                 </tr>
                 {% endfor %}
