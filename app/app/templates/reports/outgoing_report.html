@@ -38,6 +38,13 @@
             {% endfor %}
         </datalist>
     </div>
+    <div class="col-6 col-md-2">
+        <select class="form-select" name="grund">
+            <option value="">Alle Gründe</option>
+            <option value="Verkauf" {% if selected_grund == 'Verkauf' %}selected{% endif %}>Verkauf</option>
+            <option value="Kostprobe" {% if selected_grund == 'Kostprobe' %}selected{% endif %}>Kostprobe</option>
+        </select>
+    </div>
     <div class="col-12 col-md-2 d-flex gap-2">
         <button type="submit" class="btn btn-primary flex-grow-1">Filtern</button>
         <a href="{{ url_for('reports.outgoing') }}" class="btn btn-outline-secondary">&#x2715;</a>
@@ -57,6 +64,7 @@
                 <th class="text-end">Liter</th>
                 <th>Von</th>
                 <th>Nach / Ziel</th>
+                <th>Grund</th>
             </tr>
         </thead>
         <tbody>
@@ -96,6 +104,7 @@
                         Eigenbedarf
                     {% endif %}
                 </td>
+                <td>{{ b.abgang_grund or '–' }}</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -104,7 +113,7 @@
                 <td colspan="3" class="text-end">Summe ({{ bookings | length }} Einträge):</td>
                 <td class="text-end">{{ '%.4g' | format(ns.total_menge) }} Stk</td>
                 <td class="text-end">{{ '%.2f' | format(ns.total_liter) }} L</td>
-                <td colspan="2"></td>
+                <td colspan="3"></td>
             </tr>
         </tfoot>
     </table>

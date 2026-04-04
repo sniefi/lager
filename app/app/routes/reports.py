@@ -107,6 +107,7 @@ def outgoing():
     warehouse_id = request.args.get('warehouse_id', type=int)
     booking_type_filter = request.args.get('booking_type', '')
     customer = request.args.get('customer', '')
+    grund_filter = request.args.get('grund', '')
 
     query = Booking.query.filter(Booking.booking_type.in_(['Abgang', 'Umlagerung']))
 
@@ -118,6 +119,8 @@ def outgoing():
         query = query.filter(Booking.booking_type == booking_type_filter)
     if customer:
         query = query.filter(Booking.customer_name.ilike(f'%{customer}%'))
+    if grund_filter:
+        query = query.filter(Booking.abgang_grund == grund_filter)
 
     bookings = query.order_by(Booking.created_at.desc()).all()
     warehouses = Warehouse.query.order_by(Warehouse.name).all()
@@ -143,4 +146,5 @@ def outgoing():
                            selected_year=year,
                            selected_warehouse=warehouse_id,
                            selected_type=booking_type_filter,
-                           selected_customer=customer)
+                           selected_customer=customer,
+                           selected_grund=grund_filter)

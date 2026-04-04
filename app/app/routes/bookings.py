@@ -87,6 +87,7 @@ def outgoing():
         source_warehouse_id = request.form.get('source_warehouse_id', type=int)
         abgang_destination = request.form.get('abgang_destination', '')
         customer_name = request.form.get('customer_name', '').strip()
+        abgang_grund = request.form.get('abgang_grund', '').strip()
         target_warehouse_id = request.form.get('target_warehouse_id', type=int)
 
         ctx = dict(articles=articles, warehouses=warehouses,
@@ -118,6 +119,9 @@ def outgoing():
             if abgang_destination == 'Kunde' and not customer_name:
                 flash('Kundenname ist Pflichtfeld bei Abgang an Kunden.', 'danger')
                 return render_template('bookings/outgoing.html', **ctx)
+            if abgang_destination == 'Kunde' and not abgang_grund:
+                flash('Grund ist Pflichtfeld bei Abgang an Kunden.', 'danger')
+                return render_template('bookings/outgoing.html', **ctx)
 
             # Negativbestand verhindern
             current_stock = _get_stock(article.id, source_warehouse_id)
@@ -138,6 +142,7 @@ def outgoing():
                 source_warehouse_id=source_warehouse_id,
                 abgang_destination=abgang_destination,
                 customer_name=customer_name if abgang_destination == 'Kunde' else None,
+                abgang_grund=abgang_grund if abgang_destination == 'Kunde' else None,
             )
 
         elif booking_type == 'Umlagerung':

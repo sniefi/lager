@@ -14,6 +14,7 @@ class Booking(db.Model):
     target_warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouse.id'), nullable=True)
     abgang_destination = db.Column(db.Enum('Eigenbedarf', 'Kunde'), nullable=True)
     customer_name = db.Column(db.String(255), nullable=True)
+    abgang_grund = db.Column(db.String(32), nullable=True)
     is_billed = db.Column(db.SmallInteger, default=0)
     billed_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
