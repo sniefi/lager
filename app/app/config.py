@@ -13,4 +13,3 @@ class Config:
     WOO_URL = os.environ.get('WOO_URL', '')
     WOO_CONSUMER_KEY = os.environ.get('WOO_CONSUMER_KEY', '')
     WOO_CONSUMER_SECRET = os.environ.get('WOO_CONSUMER_SECRET', '')
-    WOO_LOW_STOCK_THRESHOLD = int(os.environ.get('WOO_LOW_STOCK_THRESHOLD', '5'))
