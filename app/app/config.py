@@ -10,3 +10,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     REMEMBER_COOKIE_DURATION = 60 * 60 * 24 * 30  # 30 Tage
     APP_PASSWORD_HASH = os.environ.get('APP_PASSWORD_HASH', '')
+    WOO_URL = os.environ.get('WOO_URL', '')
+    WOO_CONSUMER_KEY = os.environ.get('WOO_CONSUMER_KEY', '')
+    WOO_CONSUMER_SECRET = os.environ.get('WOO_CONSUMER_SECRET', '')
+    WOO_LOW_STOCK_THRESHOLD = int(os.environ.get('WOO_LOW_STOCK_THRESHOLD', '5'))

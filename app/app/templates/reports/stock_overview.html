@@ -3,6 +3,12 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-0">Lagerstand</h2>
+    <form method="post" action="{{ url_for('woo.sync_all') }}">
+        <button type="submit" class="btn btn-outline-primary btn-sm"
+                onclick="return confirm('Alle Lagerbestände jetzt an WooCommerce übermitteln?')">
+            🛒 WooCommerce synchronisieren
+        </button>
+    </form>
 </div>
 
 {% if warehouses %}

@@ -10,6 +10,7 @@ class Article(db.Model):
     name = db.Column(db.String(255), nullable=False)
     unit = db.Column(db.Numeric(10, 2), nullable=True)
     price = db.Column(db.Numeric(10, 2), nullable=True)
+    woo_product_id = db.Column(db.Integer, nullable=True)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 

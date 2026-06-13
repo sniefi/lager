@@ -5,6 +5,7 @@ from ..extensions import db
 from ..models.article import Article
 from ..models.warehouse import Warehouse
 from ..models.booking import Booking
+from ..services.woo_sync import push_stock
 
 bookings_bp = Blueprint('bookings', __name__, url_prefix='/bookings')
 
@@ -55,6 +56,7 @@ def incoming():
         )
         db.session.add(booking)
         db.session.commit()
+        push_stock(article)
         flash(f'Einkauf: {quantity:g} Stk „{article.name}" eingelagert.', 'success')
         return redirect(url_for('bookings.incoming'))
 
@@ -176,6 +178,7 @@ def outgoing():
 
         db.session.add(booking)
         db.session.commit()
+        push_stock(article)
         flash(f'{booking_type}: {quantity:g} Stk „{article.name}" gebucht.', 'success')
         return redirect(url_for('bookings.outgoing'))
 

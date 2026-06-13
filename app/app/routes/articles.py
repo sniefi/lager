@@ -38,7 +38,10 @@ def new():
                 flash('Ungültiger Preis.', 'danger')
                 return render_template('articles/form.html')
 
-        article = Article(article_id=article_id, name=name, unit=unit, price=price)
+        woo_id_str = request.form.get('woo_product_id', '').strip()
+        woo_product_id = int(woo_id_str) if woo_id_str.isdigit() else None
+
+        article = Article(article_id=article_id, name=name, unit=unit, price=price, woo_product_id=woo_product_id)
         db.session.add(article)
         db.session.commit()
         flash(f'Artikel „{name}" wurde angelegt.', 'success')
@@ -68,9 +71,13 @@ def edit(pk):
                 flash('Ungültiger Preis.', 'danger')
                 return render_template('articles/edit.html', article=article)
 
+        woo_id_str = request.form.get('woo_product_id', '').strip()
+        woo_product_id = int(woo_id_str) if woo_id_str.isdigit() else None
+
         article.name = name
         article.unit = unit
         article.price = price
+        article.woo_product_id = woo_product_id
         db.session.commit()
         flash(f'Artikel „{article.name}" wurde gespeichert.', 'success')
         return redirect(url_for('articles.list'))

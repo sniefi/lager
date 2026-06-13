@@ -17,6 +17,7 @@ def create_app():
     from .routes.bookings import bookings_bp
     from .routes.reports import reports_bp
     from .routes.inventur import inventur_bp
+    from .routes.woo import woo_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(articles_bp)
@@ -24,6 +25,7 @@ def create_app():
     app.register_blueprint(bookings_bp)
     app.register_blueprint(reports_bp)
     app.register_blueprint(inventur_bp)
+    app.register_blueprint(woo_bp)
 
     @app.route('/')
     def index():
